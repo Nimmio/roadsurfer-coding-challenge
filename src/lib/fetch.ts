@@ -1,4 +1,4 @@
-import type { station } from "@/store/station";
+import type { booking, station } from "@/store/station";
 
 const stationApiUrl: string =
   "https://605c94c36d85de00170da8b4.mockapi.io/stations";
@@ -18,7 +18,7 @@ export const fetchStations = async (): Promise<station[] | undefined> => {
 
     return (await response.json()) as station[];
   } catch (error: unknown) {
-    console.error(error.message);
+    console.error(error);
   }
 };
 
@@ -51,7 +51,7 @@ export const fetchBookingDetails = async ({
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
   }
 };
 
@@ -66,7 +66,7 @@ export const fetchAndReturnStationNameForId = async (
 
     const result = (await response.json()) as station;
     return result.name;
-  } catch (error: unknown) {
-    console.error(error.message);
+  } catch (error) {
+    console.error(error);
   }
 };

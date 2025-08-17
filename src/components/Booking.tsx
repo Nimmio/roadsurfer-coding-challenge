@@ -2,7 +2,7 @@ import {
   fetchAndReturnStationNameForId,
   fetchBookingDetails,
 } from "@/lib/fetch";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,

@@ -1,11 +1,10 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import Booking from "./Booking";
 import {
   fetchAndReturnStationNameForId,
   fetchBookingDetails,
 } from "@/lib/fetch";
-import { useStationStore } from "@/store/station";
 import { format } from "date-fns";
 
 // Mock data
