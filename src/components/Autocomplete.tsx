@@ -1,23 +1,47 @@
 import { useEffect, useState } from "react";
-import { useDebounce } from "use-debounce";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { fetchStationsAndFilter, type station } from "@/lib/fetch";
+import { fetchStations, type station } from "@/lib/fetch";
 
 interface AutocompleteProps {
   onSelect: (value: station) => void;
+  selectedValue: station | undefined;
 }
 
-const Autocomplete = ({ onSelect }: AutocompleteProps) => {
-  const [inputValue, setinputValue] = useState<string>("");
-  const [debouncedValue] = useDebounce<string>(inputValue, 500);
-  const [autocompleteValues, setautocompleteValues] = useState<station[]>([]);
+/**
+ * Filter Stations using the Value from Autocomplete Input
+ * @param {string} filterString The Autocomplete Input used to Filter Stations
+ * @returns {station[]} Either an array with stations or an empty array
+ */
+const filterStations = ({
+  filterString,
+  stations,
+}: {
+  filterString: string;
+  stations: station[];
+}): station[] => {
+  return stations.filter((station) =>
+    station.name.toLowerCase().includes(filterString.toLowerCase())
+  );
+};
 
+const Autocomplete = ({ onSelect, selectedValue }: AutocompleteProps) => {
+  const [inputValue, setinputValue] = useState<string>("");
+  const [autocompleteValues, setautocompleteValues] = useState<station[]>([]);
+  const [allStation, setAllStations] = useState<station[]>([]);
+
+  //Fetch All Stations and save them to State
   useEffect(() => {
-    if (debouncedValue !== "") {
-      fetchStationsAndFilter(debouncedValue).then((stations) =>
-        setautocompleteValues(stations)
+    fetchStations().then((stations) => setAllStations(stations as station[]));
+  }, []);
+
+  //Filter the Station when Input changes
+  useEffect(() => {
+    if (inputValue !== "" && inputValue !== selectedValue?.name) {
+      // dont show autcomplete if the input is ether empty or the value is the Selected Station
+      setautocompleteValues(
+        filterStations({ filterString: inputValue, stations: allStation })
       );
     } else {
       setautocompleteValues([]);
@@ -26,30 +50,44 @@ const Autocomplete = ({ onSelect }: AutocompleteProps) => {
     return () => {
       setautocompleteValues([]);
     };
-  }, [debouncedValue]);
+  }, [selectedValue?.name, inputValue, allStation]);
+
+  /**
+   * When Selected a Station give the Value to Parent Component, Set the Input to the Select Station Name and empty the Autocomplete Array
+   * @param autocompleteValue the Selected Station
+   */
+  const handleSelect = (autocompleteValue: station) => {
+    onSelect(autocompleteValue);
+    setinputValue(autocompleteValue.name);
+    setautocompleteValues([]);
+  };
 
   return (
-    <Card>
+    <div className="flex flex-col space-y-1 ">
       <Input
+        className={inputValue === selectedValue?.name ? "font-bold" : ""}
+        placeholder="Search Station"
         value={inputValue}
         onChange={(event) => setinputValue(event.currentTarget.value)}
       />
       {autocompleteValues.length > 0 && (
-        <ul>
-          {autocompleteValues.map((autocompleteValue) => (
-            <li>
-              <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => onSelect(autocompleteValue)}
-              >
-                {autocompleteValue.name}
-              </Button>
-            </li>
-          ))}
-        </ul>
+        <Card className="p-0 m-0">
+          <ul>
+            {autocompleteValues.map((autocompleteValue) => (
+              <li key={autocompleteValue.id}>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => handleSelect(autocompleteValue)}
+                >
+                  {autocompleteValue.name}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
-    </Card>
+    </div>
   );
 };
 
