@@ -1,6 +1,6 @@
-#Roadsurfer Coding Challenge
+# Roadsurfer Coding Challenge
 This repository contains a web application built for the Roadsurfer frontend coding challenge.
-##Tech Stack
+## Tech Stack
 
     Framework: React
 
