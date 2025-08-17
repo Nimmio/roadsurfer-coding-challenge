@@ -1,24 +1,40 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import Booking from "./Booking";
 import {
   fetchAndReturnStationNameForId,
   fetchBookingDetails,
 } from "@/lib/fetch";
+import { useStationStore } from "@/store/station";
 import { format } from "date-fns";
-//Mocks
+
+// Mock data
+const mockBooking = {
+  id: "booking-123",
+  customerName: "John Doe",
+  startDate: "2024-01-10T00:00:00.000Z",
+  endDate: "2024-01-20T00:00:00.000Z",
+};
+const mockStation = {
+  id: "station-456",
+  name: "Mock Station Name",
+};
+
 vi.mock("@/lib/fetch", () => ({
   fetchAndReturnStationNameForId: vi.fn(() =>
-    Promise.resolve("Mock Station Name")
+    Promise.resolve(mockStation.name)
   ),
-  fetchBookingDetails: vi.fn(() =>
-    Promise.resolve({
-      id: "booking-123",
-      customerName: "John Doe",
-      startDate: "2024-01-10T00:00:00.000Z",
-      endDate: "2024-01-20T00:00:00.000Z",
-    })
-  ),
+  fetchBookingDetails: vi.fn(() => Promise.resolve(mockBooking)),
+}));
+
+const mockStore = {
+  selectedStation: undefined,
+  selectedBookingId: undefined,
+  unSetSelectedBookingId: vi.fn(),
+};
+
+vi.mock("@/store/station", () => ({
+  useStationStore: vi.fn((selector) => selector(mockStore)),
 }));
 
 vi.mock("@/lib/utils", () => ({
@@ -63,37 +79,35 @@ vi.mock("./ui/table", () => ({
     <tr data-testid="mock-table-row">{children}</tr>
   )),
 }));
-//Tests
-describe("Booking", () => {
-  const mockOnBack = vi.fn();
-  const mockProps = {
-    bookingId: "booking-123",
-    stationId: "station-456",
-    onBack: mockOnBack,
-  };
 
+// Tests
+describe("Booking", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStore.selectedStation = mockStation;
+    mockStore.selectedBookingId = mockBooking.id;
+    mockStore.unSetSelectedBookingId = vi.fn();
   });
 
   it("should display a loading message initially", () => {
-    render(<Booking {...mockProps} />);
+    mockStore.selectedStation = undefined;
+    mockStore.selectedBookingId = undefined;
+
+    render(<Booking />);
     expect(screen.getByText("Loading")).toBeInTheDocument();
   });
 
   it("should fetch and display booking details after data is loaded", async () => {
-    render(<Booking {...mockProps} />);
+    render(<Booking />);
 
     const table = await screen.findByTestId("mock-table");
     expect(table).toBeInTheDocument();
 
     expect(fetchBookingDetails).toHaveBeenCalledWith({
-      stationId: mockProps.stationId,
-      bookingId: mockProps.bookingId,
+      stationId: mockStation.id,
+      bookingId: mockBooking.id,
     });
-    expect(fetchAndReturnStationNameForId).toHaveBeenCalledWith(
-      mockProps.stationId
-    );
+    expect(fetchAndReturnStationNameForId).toHaveBeenCalledWith(mockStation.id);
 
     expect(screen.getByText("John Doe")).toBeInTheDocument();
     expect(screen.getByText("01/10/2024")).toBeInTheDocument();
@@ -102,14 +116,15 @@ describe("Booking", () => {
     expect(screen.getByText("Mock Station Name")).toBeInTheDocument();
   });
 
-  it("should call the onBack handler when the 'Back' button is clicked", async () => {
-    render(<Booking {...mockProps} />);
+  it("should call the unSetSelectedBookingId store action when the 'Back' button is clicked", async () => {
+    render(<Booking />);
 
-    const backButton = await screen.findByText("Back");
+    await screen.findByText("Back");
+    const backButton = screen.getByText("Back");
     expect(backButton).toBeInTheDocument();
 
     fireEvent.click(backButton);
 
-    expect(mockOnBack).toHaveBeenCalledTimes(1);
+    expect(mockStore.unSetSelectedBookingId).toHaveBeenCalledTimes(1);
   });
 });
