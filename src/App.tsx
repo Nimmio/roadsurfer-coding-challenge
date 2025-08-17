@@ -1,10 +1,8 @@
+import Calendar from "./Calendar";
+import Autocomplete from "./components/Autocomplete";
 
 function App() {
-
-  return (
-  <>Main</>
-   
-  )
+  return <Calendar />;
 }
 
-export default App
+export default App;
