@@ -7,21 +7,19 @@ import {
   startOfWeek,
   subWeeks,
 } from "date-fns";
-import type { booking, station } from "@/lib/fetch";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { formatDate } from "@/lib/utils";
+import { useStationStore, type booking } from "@/store/station";
 
-interface CalendarProps {
-  selectedStation: station | undefined;
-  onBookingSelect: (bookingId: string) => void;
-}
-
-const Calendar = ({ selectedStation, onBookingSelect }: CalendarProps) => {
+const Calendar = () => {
   const [startDate, setStartDate] = useState<Date>(startOfWeek(new Date()));
   const [currentWeekDays, setCurrentWeekDays] = useState<Date[]>();
-
+  const selectedStation = useStationStore((state) => state.selectedStation);
+  const setSelectedBookingId = useStationStore(
+    (state) => state.setSelectedBookingId
+  );
   useEffect(() => {
     const WeekDays = [];
     for (let index = 0; index <= 6; index++) {
@@ -59,7 +57,7 @@ const Calendar = ({ selectedStation, onBookingSelect }: CalendarProps) => {
             {getBookingForDate(currentWeekDay).map((booking) => (
               <Badge
                 key={booking.id}
-                onClick={() => onBookingSelect(booking.id)}
+                onClick={() => setSelectedBookingId(booking.id)}
                 className="mx-auto cursor-pointer "
                 variant="secondary"
               >

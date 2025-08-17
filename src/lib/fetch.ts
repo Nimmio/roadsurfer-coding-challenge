@@ -1,12 +1,4 @@
-export type station = { id: string; name: string; bookings: booking[] };
-
-export type booking = {
-  id: string;
-  pickupReturnStationId: string;
-  customerName: string;
-  startDate: string;
-  endDate: string;
-};
+import type { station } from "@/store/station";
 
 const stationApiUrl: string =
   "https://605c94c36d85de00170da8b4.mockapi.io/stations";

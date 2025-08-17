@@ -1,7 +1,6 @@
 import {
   fetchAndReturnStationNameForId,
   fetchBookingDetails,
-  type booking,
 } from "@/lib/fetch";
 import React, { useEffect, useState } from "react";
 import {
@@ -15,28 +14,28 @@ import { differenceInDays, parseISO } from "date-fns";
 import { Button } from "./ui/button";
 import { formatDate } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableRow } from "./ui/table";
+import { useStationStore, type booking } from "@/store/station";
 
-interface BookingProps {
-  stationId: string;
-  bookingId: string;
-  onBack: () => void;
-}
-
-const Booking = ({ bookingId, stationId, onBack }: BookingProps) => {
+const Booking = () => {
   const [booking, setBooking] = useState<booking | undefined>(undefined);
   const [stationName, setStationName] = useState<string | undefined>(undefined);
+  const selectedStation = useStationStore((state) => state.selectedStation);
+  const selectedBookingId = useStationStore((state) => state.selectedBookingId);
+  const unSetSelectedBookingId = useStationStore(
+    (state) => state.unSetSelectedBookingId
+  );
+  useEffect(() => {
+    fetchBookingDetails({
+      stationId: selectedStation?.id as string,
+      bookingId: selectedBookingId as string,
+    }).then((booking) => setBooking(booking as booking));
+  }, [selectedStation?.id, selectedBookingId]);
 
   useEffect(() => {
-    fetchBookingDetails({ stationId: stationId, bookingId: bookingId }).then(
-      (booking) => setBooking(booking as booking)
+    fetchAndReturnStationNameForId(selectedStation?.id as string).then(
+      (stationName) => setStationName(stationName)
     );
-  }, [bookingId, stationId]);
-
-  useEffect(() => {
-    fetchAndReturnStationNameForId(stationId).then((stationName) =>
-      setStationName(stationName)
-    );
-  }, [stationId]);
+  }, [selectedStation?.id]);
 
   return (
     <Card>
@@ -78,7 +77,7 @@ const Booking = ({ bookingId, stationId, onBack }: BookingProps) => {
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={() => onBack()}>Back</Button>
+        <Button onClick={() => unSetSelectedBookingId()}>Back</Button>
       </CardFooter>
     </Card>
   );
